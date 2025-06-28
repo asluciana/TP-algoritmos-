@@ -137,6 +137,41 @@ class obtener_estado_tablero_visibleTest(unittest.TestCase):
         visible[0][0] = 'MODIFICADO'
         self.assertNotEqual(visible, estado['tablero_visible'])
 
+class marcar_celdaTest(unittest.TestCase):
+    def test_ejemplo(self):
+        estado: EstadoJuego = {
+            'filas': 2,
+            'columnas': 2,
+            'minas': 1,
+            'tablero': [
+                [-1, 1],
+                [1, 1]
+            ],
+            'tablero_visible': [
+                [VACIO, VACIO],
+                [VACIO, VACIO]
+            ],
+            'juego_terminado': False
+        }
+        marcar_celda(estado, 0, 0)
+        # Testeamos que sólo la celda marcada sea visible
+        self.assertEqual(estado['tablero_visible'], [
+            [BANDERA, VACIO],
+            [VACIO, VACIO]
+        ])
+        # Testeamos que el resto no se modificó
+        self.assertEqual(estado['filas'], 2)
+        self.assertEqual(estado['columnas'], 2)
+        self.assertEqual(estado['minas'], 1)
+        self.assertEqual(estado['tablero'], [
+            [-1, 1],
+            [1, 1]
+        ])
+        self.assertFalse(estado['juego_terminado'])
+        # Testeamos que haya una mina en el tablero
+        self.assertEqual(cant_minas_en_tablero(estado['tablero']), 1)
+
+
 
         
 

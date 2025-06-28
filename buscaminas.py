@@ -102,10 +102,18 @@ def obtener_estado_tablero_visible(estado: EstadoJuego) -> list[list[str]]:
         copia_estado.append(fila_copia)
     return copia_estado
 
-
+#ejercicio5-------------------------------------------
 
 def marcar_celda(estado: EstadoJuego, fila: int, columna: int) -> None:
-    return
+   
+    if 0 <= fila < estado['filas'] and 0 <= columna < estado['columnas']:
+        if not estado['juego_terminado']:
+            celda = estado['tablero_visible'][fila][columna]
+            
+            if celda == VACIO:
+                estado['tablero_visible'][fila][columna] = BANDERA
+            elif celda == BANDERA:
+                estado['tablero_visible'][fila][columna] = VACIO
 
 
 def descubrir_celda(estado: EstadoJuego, fila: int, columna: int) -> None:
