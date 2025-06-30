@@ -36,49 +36,57 @@ def colocar_minas(filas:int, columnas: int, minas:int) -> list[list[int]]:
 
 #ejercicio 2 ---------------------------------------------------
 
-def calcular_numeros(tablero: list[list[int]]) -> None :
-    filas = len(tablero)
-    columnas = len(tablero[0])
+def filas_columnas_vecinas(tablero: list[list[int]]) -> None:
+    """Calculamos la cantidad de minas en las celdas vecinas de cada celda en el tablero"""
+    filas:int = len(tablero)
+    columnas:int = len(tablero[0])
 
-    tablero_og = []
-    for fila in tablero:
-        fila_nueva = []
-        for numero in fila:
-            fila_nueva.append(numero)
-        tablero_og.append(fila_nueva)
-        
     for i in range(filas):
         for j in range(columnas):
-            if tablero_og[i][j] != -1:
-                contador = 0
+            if tablero[i][j] != -1:
+                contador:int = 0
                 #subir bajar posiciones
                 for sb in [-1, 0, 1]:
                     #izquierda derecha posiciones
                     for id in [-1, 0, 1]:
                         if not (sb == 0 and id == 0): #combinaciones de posicion:
-                            psb= i + sb   
-                            pid = j + id
+                            psb:int = i + sb   
+                            pid:int = j + id
                             if 0 <= psb < filas and 0 <= pid < columnas:
-                                if tablero_og[psb][pid] == -1:
+                                if tablero[psb][pid] == -1:
                                     contador += 1
                 tablero[i][j] = contador
+
+def calcular_numeros(tablero: list[list[int]]) -> None :
+    filas:int = len(tablero)
+    columnas:int = len(tablero[0])
+
+    tablero_original: list[list[int]] = []
+    for fila in tablero:
+        fila_nueva:list[int] = []
+        for numero in fila:
+            fila_nueva.append(numero)
+        tablero_original.append(fila_nueva)
+        
+    filas_columnas_vecinas(tablero_original)
+    
 
         
 #ejecicio 3_____________________________________________________
 
 def crear_juego(filas:int, columnas:int, minas:int) -> EstadoJuego:
 
-    tablero = colocar_minas(filas, columnas, minas)
+    tablero: list[list[int]] = colocar_minas(filas, columnas, minas)
     calcular_numeros(tablero)
 
-    tablero_visible = []
+    tablero_visible: list[list[str]]= []
     for i in range(filas):
-        fila_visible = []
+        fila_visible: list[str] = []
         for j in range(columnas):
             fila_visible.append(VACIO)
         tablero_visible.append(fila_visible)
     
-    estado = {
+    estado: EstadoJuego = {
         "filas": filas,
         "columnas": columnas,
         "minas": minas,
@@ -94,9 +102,9 @@ def crear_juego(filas:int, columnas:int, minas:int) -> EstadoJuego:
 
 def obtener_estado_tablero_visible(estado: EstadoJuego) -> list[list[str]]:
 
-    copia_estado = []
+    copia_estado: EstadoJuego = []
     for fila in estado["tablero_visible"]:
-        fila_copia = []
+        fila_copia: list[str] = []
         for cell in fila:
             fila_copia.append(cell)
         copia_estado.append(fila_copia)
