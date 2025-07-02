@@ -240,7 +240,7 @@ def recorrido_descubierto (tablero: list[list[int]], tablero_visible: list[list[
                 vecinos = vecinos_validos(filas, columnas, i, j)
                 for vecino in vecinos:
                     vi = vecino[0]
-                    vj = vecino[j]
+                    vj = vecino[1]
                     
                     # No fue descubierta, no tiene bandera y tampoco esta pendiente de ver, se agrega a pendientes
                     if vecino not in descubiertos and vecino not in pendientes and tablero_visible[vi][vj] != BANDERA:
@@ -264,7 +264,7 @@ def todas_celdas_seguras_descubiertas(tablero: list[list[int]], tablero_visible:
     for i in range(filas):
         for j in range(columnas):
             if tablero[i][j] != -1:
-                if tablero_visible == VACIO:
+                if tablero_visible[i][j] == VACIO:
                     return False
     return True
             
@@ -385,11 +385,7 @@ def cargar_estado(estado: EstadoJuego, ruta_directorio: str) -> bool:
     lineas_tablero: list[str] = leer_lineas(ruta_tablero)
     lineas_tablero_visible: list[str] = leer_lineas(ruta_tablero_visible)
     
-    if not validar_formato_lineas(lineas_tablero):
-        return False
-    if not validar_formato_lineas(lineas_tablero_visible):
-        return False
-    if len(lineas_tablero) != len(lineas_tablero_visible):
+    if not (validar_formato_lineas(lineas_tablero) and validar_formato_lineas(lineas_tablero_visible) and len(lineas_tablero) == len(lineas_tablero_visible)):
         return False
     
     tablero: list[list[int]] = convertir_a_tablero(lineas_tablero)
@@ -399,13 +395,36 @@ def cargar_estado(estado: EstadoJuego, ruta_directorio: str) -> bool:
     columnas: int = len(tablero[0])
     celdas_seguras_ocultas: int = 0
     minas: int = 0
- 
-    # funcion que traduzca lo guardado
-    # chequear que este todo ok              
     
-    return False
-
+    for i in range(filas):
+        for j in range(columnas):
+            valor: int = tablero[i][j]
+            valor_visible: str = tablero_visible[i][j]
+            
+            if valor == -1:
+                minas += 1
+            if valor > 0 and valor_visible == VACIO:
+                celdas_seguras_ocultas += 1
+ 
+    # Actualizar 
+    estado['tablero'] = tablero  
+    estado['tablero_visible'] = tablero_visible   
+    estado['minas'] = minas  
+    estado['celdas_seguras_ocultas'] = celdas_seguras_ocultas  
+    estado['filas'] = filas  
+    estado['columnas'] = columnas  
+    return True  
+    
 def leer_lineas(ruta_archivo: str) -> list[str]:
+    """Lee las lineas no vacias de un archivo de texto y devuelve 
+    una lista de strings sin espacios ni saltos de lineas
+
+    Args:
+        ruta_archivo (str): ruta dela rchivo
+
+    Returns:
+        list[str]: lista de lineas del archivo modificada
+    """
     archivo: TextIO = open(ruta_archivo, "r")
     lineas: list[str] = []
     for linea in archivo:
@@ -415,16 +434,23 @@ def leer_lineas(ruta_archivo: str) -> list[str]:
     archivo.close()
     return lineas
 def validar_formato_lineas(lineas: list[str])-> bool:
+    """Verifica que se cumpla la cantidad de comas por lineas
+
+    Args:
+        lineas (list[str]): _description_
+
+    Returns:
+        bool: _description_
+    """
     if len(lineas) == 0:
         return False
     cantidad_de_comas: int = 0
     for caracter in lineas[0]:
-
         if caracter == ',':
             cantidad_de_comas += 1
     for linea in lineas:
-        coma_lineas: int = 0
-        for caracter in lineas:
+        comas_lineas: int = 0
+        for caracter in linea:
             if caracter == ',':
                 comas_lineas += 1
         if comas_lineas != cantidad_de_comas:
@@ -432,6 +458,14 @@ def validar_formato_lineas(lineas: list[str])-> bool:
     return True
 
 def convertir_a_tablero(lineas: list[str]) -> list[list[int]]:
+    """Convierte de listas de lineas de texto a tablero
+
+    Args:
+        lineas (list[str]): _description_
+
+    Returns:
+        list[list[int]]: _description_
+    """
     tablero: list[list[int]] = []
     for linea in lineas:
         fila_str: list[str] = linea.split(',')
@@ -442,6 +476,14 @@ def convertir_a_tablero(lineas: list[str]) -> list[list[int]]:
     return tablero
 
 def convertir_a_tablero_visible(lineas: list[str]) -> list[list[str]]:
+    """Convierte de una lista de lineas del archivo de texto de tablero visible al tablero visible
+
+    Args:
+        lineas (list[str]): _description_
+
+    Returns:
+        list[list[str]]: _description_
+    """
     tablero_visible: list[list[str]] = []
     for linea in lineas:
         fila_str: list[str] = linea.split(",")
