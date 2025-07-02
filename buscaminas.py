@@ -54,7 +54,7 @@ def filas_columnas_vecinas(tablero: list[list[int]]) -> list[list[int]]:
                 vecinos = vecinos_validos(filas, columnas, i, j)
                 for vecino in vecinos:
                     vi = vecino[0]
-                    vj = vecino[j]
+                    vj = vecino[1]
                     if tablero[vi][vj] == -1:
                         contador += 1
                 fila_res.append(contador)
@@ -73,7 +73,7 @@ def vecinos_validos (filas: int, columnas: int, i: int, j: int) -> list[tuple[in
         for id in [-1,0,1]:
             psb = i + sb
             pid = j + id
-            if 0 <= psb < filas and o <= pid < columnas:
+            if 0 <= psb < filas and 0 <= pid < columnas:
                 if not(psb == i and pid == j):
                     res.append((psb,pid))
     return res
@@ -300,7 +300,7 @@ def reiniciar_juego(estado: EstadoJuego) -> None:
     calcular_numeros(tablero_nuevo)
     
     # Creacion del tablero visible con celdas de valor VACIO
-    tablero_visible_nuevo: list[list[str]] = str 
+    tablero_visible_nuevo: list[list[str]] = []
     for i in range(filas):
         fila_visible: list[str] = []
         for j in range(columnas):
@@ -309,7 +309,7 @@ def reiniciar_juego(estado: EstadoJuego) -> None:
         
     # Actualizacion de estados
     estado['tablero']= tablero_nuevo
-    estado['tabler_visible'] = tablero_visible_nuevo
+    estado['tablero_visible'] = tablero_visible_nuevo
     estado['juego_terminado'] = False
     
 
@@ -375,4 +375,83 @@ def guardar_tablero_visible(tablero_visible: list[list[str]], ruta_archivo: str)
     archivo.close()
 
 def cargar_estado(estado: EstadoJuego, ruta_directorio: str) -> bool:
+    
+    ruta_tablero: str = os.path.join(ruta_directorio, "tablero.txt")
+    ruta_tablero_visible: str = os.path.join(ruta_directorio, "tablero_visible.txt")
+    
+    if not (existe_archivo(ruta_directorio, "tablero.txt") and existe(ruta_directorio, "tablero_visible.txt")):
+        return False
+    
+    lineas_tablero: list[str] = leer_lineas(ruta_tablero)
+    lineas_tablero_visible: list[str] = leer_lineas(ruta_tablero_visible)
+    
+    if not validar_formato_lineas(lineas_tablero):
+        return False
+    if not validar_formato_lineas(lineas_tablero_visible):
+        return False
+    if len(lineas_tablero) != len(lineas_tablero_visible):
+        return False
+    
+    tablero: list[list[int]] = convertir_a_tablero(lineas_tablero)
+    tablero_visible: list[list[str]] = convertir_a_tablero_visible(lineas_tablero_visible)
+    
+    filas:int = len(tablero)
+    columnas: int = len(tablero[0])
+    celdas_seguras_ocultas: int = 0
+    minas: int = 0
+ 
+    # funcion que traduzca lo guardado
+    # chequear que este todo ok              
+    
     return False
+
+def leer_lineas(ruta_archivo: str) -> list[str]:
+    archivo: TextIO = open(ruta_archivo, "r")
+    lineas: list[str] = []
+    for linea in archivo:
+        linea_strip: str = linea.strip()
+        if linea.strip() != "":
+            lineas.append(linea_strip)
+    archivo.close()
+    return lineas
+def validar_formato_lineas(lineas: list[str])-> bool:
+    if len(lineas) == 0:
+        return False
+    cantidad_de_comas: int = 0
+    for caracter in lineas[0]:
+
+        if caracter == ',':
+            cantidad_de_comas += 1
+    for linea in lineas:
+        coma_lineas: int = 0
+        for caracter in lineas:
+            if caracter == ',':
+                comas_lineas += 1
+        if comas_lineas != cantidad_de_comas:
+            return False
+    return True
+
+def convertir_a_tablero(lineas: list[str]) -> list[list[int]]:
+    tablero: list[list[int]] = []
+    for linea in lineas:
+        fila_str: list[str] = linea.split(',')
+        fila_int: list[int] = []
+        for valor in fila_str:
+            fila_int.append(int(valor))
+        tablero.append(fila_int)
+    return tablero
+
+def convertir_a_tablero_visible(lineas: list[str]) -> list[list[str]]:
+    tablero_visible: list[list[str]] = []
+    for linea in lineas:
+        fila_str: list[str] = linea.split(",")
+        fila: list[str] = []
+        for simbolo in fila_str:
+            if simbolo == "*":
+                fila.append(BANDERA)
+            elif simbolo == "?":
+                fila.append(VACIO)
+            else:
+                fila.append(simbolo)
+        tablero_visible.append(fila)
+    return tablero_visible
