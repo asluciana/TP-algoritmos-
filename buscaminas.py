@@ -46,7 +46,7 @@ def filas_columnas_vecinas(tablero: list[list[int]]) -> list[list[int]]:
     for i in range(filas):
         fila_res: list[int] = []
         for j in range(columnas):
-            if tablero[i][j] != -1:
+            if tablero[i][j] == -1:
                 # Celda con mina
                 fila_res.append(-1)
             else:
