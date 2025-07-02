@@ -1,5 +1,5 @@
 import random
-from typing import Any
+from typing import Any, TextIO
 import os
 
 # Constantes para dibujar
@@ -248,7 +248,7 @@ def recorrido_descubierto (tablero: list[list[int]], tablero_visible: list[list[
     return descubiertos
 
 def todas_celdas_seguras_descubiertas(tablero: list[list[int]], tablero_visible: list[list[str]]) -> bool:
-    """Funcion auxiliar que verifica que todas las celdas que no son minas fueron descubiertas
+    """Verifica que todas las celdas que no son minas fueron descubiertas
 
     Args:
         tablero (list[list[int]]): tablero
@@ -272,16 +272,107 @@ def todas_celdas_seguras_descubiertas(tablero: list[list[int]], tablero_visible:
 
 
 def verificar_victoria(estado: EstadoJuego) -> bool:
-    return True
+    """Devuelve true si todas las celdas seguras son descubiertas 
+
+    Args:
+        estado (EstadoJuego): diccionario de los diferentes valores asociadoas al estado de juego
+
+    Returns:
+        bool: valor de verdad
+    """
+    return todas_celdas_seguras_descubiertas(estado['tablero'], estado['tablero_visible'])
 
 
 def reiniciar_juego(estado: EstadoJuego) -> None:
-    return
+    """Reinicia el juego manteniendo las dimensiones del tablero y
+    cantidad de minas.
+    Cambia el estado del juego.
+
+    Args:
+        estado (EstadoJuego): diccionario de los diferentes valores asociados al estado del juego
+    """
+    filas: int = estado['filas']
+    columnas: int = estado['columnas']
+    minas: int = estado['minas']    
+    
+    # Copia del tablero con nueva disposicion de minas en el tablero
+    tablero_nuevo = colocar_minas(filas, columnas, minas)
+    calcular_numeros(tablero_nuevo)
+    
+    # Creacion del tablero visible con celdas de valor VACIO
+    tablero_visible_nuevo: list[list[str]] = str 
+    for i in range(filas):
+        fila_visible: list[str] = []
+        for j in range(columnas):
+            fila_visible.append(VACIO)
+        tablero_visible_nuevo.append(fila_visible)
+        
+    # Actualizacion de estados
+    estado['tablero']= tablero_nuevo
+    estado['tabler_visible'] = tablero_visible_nuevo
+    estado['juego_terminado'] = False
+    
 
 
 def guardar_estado(estado: EstadoJuego, ruta_directorio: str) -> None:
+    """Guarda el estado del juego en dos archivos de texto, uno para tablero y otro para tablero visible
+
+    Args:
+        estado (EstadoJuego): diccionario de valores asociados al estado del juego
+        ruta_directorio (str): ruta del archivo
+    """
+    tablero_visible: list[list[str]] = estado['tablero_visible']
+    tablero: list[list[int]] = estado['tablero']
+    # Genero mis text files de tableros
+    ruta_tablero:str = os.path.join(ruta_directorio, "tablero.txt")
+    ruta_tablero_visible:str = os.path.join(ruta_directorio, "tablero_visible.txt")
+    
+    guardar_tablero(tablero, ruta_tablero)
+    guardar_tablero_visible(tablero_visible, ruta_tablero_visible)
     return
 
+def guardar_tablero(tablero: list[list[int]], ruta_archivo: str) -> None:
+    """Guarda el tablero en un archivo de texto, separado por comas y sin espacios
+
+    Args:
+        tablero (list[list[int]]): tablero
+        ruta_archivo (str): ruta del archivo
+    """
+    archivo: TextIO = open(ruta_archivo, "w")
+    for fila in tablero:
+        linea: str = ""
+        filas: int = len(fila)
+        for i in range(filas): 
+            linea += str(fila[i])
+            if i < filas - 1:
+                linea += ","
+        archivo.write(linea + "\n")
+    archivo.close()
+
+def guardar_tablero_visible(tablero_visible: list[list[str]], ruta_archivo: str):
+    """Guarda el tablero visible en un archivo 
+    reemplazando los simbolos por otros caracteres
+
+    Args:
+        tablero_visible (list[list[str]]): tablero visible
+        ruta_archivo (str): ruta del archivo
+    """
+    archivo: TextIO = open(ruta_archivo, "w")
+    for fila in tablero_visible:
+        linea:str = ""
+        filas: int = len(fila)
+        for i in range(filas):
+            celda: str = fila[i]
+            if celda == BANDERA:
+                linea += "*"
+            elif celda == VACIO:
+                linea += "?"
+            else:
+                linea += celda
+            if i < filas -1 :
+                linea += ","
+        archivo.write(linea + "\n")
+    archivo.close()
 
 def cargar_estado(estado: EstadoJuego, ruta_directorio: str) -> bool:
     return False
