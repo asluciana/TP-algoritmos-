@@ -142,16 +142,7 @@ def marcar_celda(estado: EstadoJuego, fila: int, columna: int) -> None:
 
 #ejercicio 6-------------------------------------------
 def descubrir_celda(estado: EstadoJuego, fila: int, columna: int) -> None:
-    """
-    Descubre la celda en el estado dado. Si es mina, el juego termina y se muestran todas las minas del tablero.
-    Caso contrario, se descubren las celdas aledanas segune el camino descubierto.
-    Actualiza 'tablero_visible' y cambia el estado del juego si se topa con una mina.
-
-    Args:
-        estado (EstadoJuego): _description_
-        fila (int): _description_
-        columna (int): _description_
-    """
+  
     if estado['juego_terminado'] == False:
         if estado['tablero'][fila][columna] == -1:
             estado['juego_terminado'] = True
@@ -169,7 +160,11 @@ def descubrir_celda(estado: EstadoJuego, fila: int, columna: int) -> None:
             i = posicion[0]
             j = posicion[1]
             if estado['tablero_visible'][i][j] != BANDERA:
-                estado['tablero_visible'][i][j] = str(estado['tablero'][i][j])
+                if estado['tablero'][i][j] == -1:
+                     estado['tablero_visible'][i][j] = BOMBA  # BOMBA para las minas
+                else:
+                    estado['tablero_visible'][i][j] = str(estado['tablero'][i][j])  # Para otra celdas(numero)
+                
             
     if todas_celdas_seguras_descubiertas(estado['tablero'], estado['tablero_visible']):
         estado['juego_terminado'] = True
@@ -385,11 +380,7 @@ def cargar_estado(estado: EstadoJuego, ruta_directorio: str) -> bool:
     lineas_tablero: list[str] = leer_lineas(ruta_tablero)
     lineas_tablero_visible: list[str] = leer_lineas(ruta_tablero_visible)
     
-    if not validar_formato_lineas(lineas_tablero):
-        return False
-    if not validar_formato_lineas(lineas_tablero_visible):
-        return False
-    if len(lineas_tablero) != len(lineas_tablero_visible):
+    if not (validar_formato_lineas(lineas_tablero) and validar_formato_lineas(lineas_tablero_visible) and len(lineas_tablero) == len(lineas_tablero_visible)):
         return False
     
     tablero: list[list[int]] = convertir_a_tablero(lineas_tablero)
@@ -399,13 +390,36 @@ def cargar_estado(estado: EstadoJuego, ruta_directorio: str) -> bool:
     columnas: int = len(tablero[0])
     celdas_seguras_ocultas: int = 0
     minas: int = 0
- 
-    # funcion que traduzca lo guardado
-    # chequear que este todo ok              
     
-    return False
-
+    for i in range(filas):
+        for j in range(columnas):
+            valor: int = tablero[i][j]
+            valor_visible: str = tablero_visible[i][j]
+            
+            if valor == -1:
+                minas += 1
+            if valor > 0 and valor_visible == VACIO:
+                celdas_seguras_ocultas += 1
+ 
+    # Actualizar 
+    estado['tablero'] = tablero  
+    estado['tablero_visible'] = tablero_visible   
+    estado['minas'] = minas  
+    estado['celdas_seguras_ocultas'] = celdas_seguras_ocultas  
+    estado['filas'] = filas  
+    estado['columnas'] = columnas  
+    return True  
+    
 def leer_lineas(ruta_archivo: str) -> list[str]:
+    """Lee las lineas no vacias de un archivo de texto y devuelve 
+    una lista de strings sin espacios ni saltos de lineas
+
+    Args:
+        ruta_archivo (str): ruta dela rchivo
+
+    Returns:
+        list[str]: lista de lineas del archivo modificada
+    """
     archivo: TextIO = open(ruta_archivo, "r")
     lineas: list[str] = []
     for linea in archivo:
@@ -415,11 +429,18 @@ def leer_lineas(ruta_archivo: str) -> list[str]:
     archivo.close()
     return lineas
 def validar_formato_lineas(lineas: list[str])-> bool:
+    """Verifica que se cumpla la cantidad de comas por lineas
+
+    Args:
+        lineas (list[str]): _description_
+
+    Returns:
+        bool: _description_
+    """
     if len(lineas) == 0:
         return False
     cantidad_de_comas: int = 0
     for caracter in lineas[0]:
-
         if caracter == ',':
             cantidad_de_comas += 1
     for linea in lineas:
@@ -432,6 +453,14 @@ def validar_formato_lineas(lineas: list[str])-> bool:
     return True
 
 def convertir_a_tablero(lineas: list[str]) -> list[list[int]]:
+    """Convierte de listas de lineas de texto a tablero
+
+    Args:
+        lineas (list[str]): _description_
+
+    Returns:
+        list[list[int]]: _description_
+    """
     tablero: list[list[int]] = []
     for linea in lineas:
         fila_str: list[str] = linea.split(',')
@@ -442,6 +471,14 @@ def convertir_a_tablero(lineas: list[str]) -> list[list[int]]:
     return tablero
 
 def convertir_a_tablero_visible(lineas: list[str]) -> list[list[str]]:
+    """Convierte de una lista de lineas del archivo de texto de tablero visible al tablero visible
+
+    Args:
+        lineas (list[str]): _description_
+
+    Returns:
+        list[list[str]]: _description_
+    """
     tablero_visible: list[list[str]] = []
     for linea in lineas:
         fila_str: list[str] = linea.split(",")

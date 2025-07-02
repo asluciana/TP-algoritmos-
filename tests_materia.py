@@ -1,6 +1,6 @@
-import unittest
+import unittest, tempfile
 from buscaminas import (crear_juego, descubrir_celda, marcar_celda, obtener_estado_tablero_visible,
-                               reiniciar_juego, colocar_minas, calcular_numeros, verificar_victoria, guardar_estado, cargar_estado, BOMBA, BANDERA, VACIO, EstadoJuego)
+                               reiniciar_juego, colocar_minas, calcular_numeros, verificar_victoria, guardar_estado,  BOMBA, BANDERA, VACIO, EstadoJuego)
 
 
 '''
@@ -210,6 +210,31 @@ class descubrir_celdaTest(unittest.TestCase):
         self.assertEqual(cant_minas_en_tablero(estado['tablero']), 3)
         self.assertFalse(estado['juego_terminado'])
 
+    def test_descubrir_mina_termina_juego(self):
+        estado = {
+            'filas': 2,
+            'columnas': 2,
+            'minas': 1,
+            'tablero': [[-1, 1],
+                        [1, 1]],
+            'tablero_visible': [[VACIO, VACIO],
+                                [VACIO, VACIO]],
+            'juego_terminado': False
+        }
+        descubrir_celda(estado, 0, 0)
+        self.assertTrue(estado['juego_terminado'])
+        self.assertEqual(estado['tablero_visible'][0][0], BOMBA)
+
+    def test_descubrir_celda_bloqueada_por_bandera(self):
+        estado = crear_juego(2, 2, 0)
+        estado['tablero'] = [[0, 0],
+                             [0, 0]]
+        estado['tablero_visible'] = [[BANDERA, VACIO],
+                                     [VACIO, VACIO]]
+        descubrir_celda(estado, 0, 0)
+        # La celda con bandera no debe cambiar
+        self.assertEqual(estado['tablero_visible'][0][0], BANDERA)
+
 
 class verificar_victoriaTest(unittest.TestCase):
     def test_ejemplo(self):
@@ -242,6 +267,23 @@ class verificar_victoriaTest(unittest.TestCase):
             ["1", "1"]
         ])
         self.assertFalse(estado['juego_terminado'])
+
+    def test_celda_oculta_sin_descubrir_no_gano(self):
+        estado = crear_juego(2, 2, 1)
+        estado['tablero'] = [[-1, 1],
+                             [1, 1]]
+        estado['tablero_visible'] = [[VACIO, VACIO],
+                                     [VACIO, VACIO]]
+        self.assertFalse(verificar_victoria(estado))
+
+    def test_juego_terminado_pero_faltan_celdas(self):
+        estado = crear_juego(2, 2, 1)
+        estado['tablero'] = [[-1, 1],
+                             [1, 1]]
+        estado['tablero_visible'] = [[VACIO, "1"],
+                                     [VACIO, "1"]]
+        estado['juego_terminado'] = True
+        self.assertFalse(verificar_victoria(estado))
         
 
 
@@ -317,22 +359,16 @@ class reiniciar_juegoTest(unittest.TestCase):
             [ 1, 1]
         ])
 
-# Tarea: Pensar cómo testear  guardar_estado y cargar_estado
+    def test_reinicia_juego_con_misma_dim(self):
+        estado = crear_juego(3, 3, 2)
+        viejo_tablero = [fila.copy() for fila in estado['tablero']]
+        reiniciar_juego(estado)
+        self.assertEqual(len(estado['tablero']), 3)
+        self.assertEqual(len(estado['tablero_visible'][0]), 3)
+        self.assertNotEqual(estado['tablero'], viejo_tablero)
+        self.assertFalse(estado['juego_terminado'])
 
-class guardar_estadoTest(unittest.TestCase):
-    def test_ejemplo (self):
-        return
 
-class cargar_estadoTest(unittest.TestCase):
-    def test_ejemplo (self):
-        return
-
-
-"""
-- Agregar varios casos de prueba para cada función.
-- Se debe cubrir al menos el 95% de las líneas de cada función.
-- Se debe cubrir al menos el 95% de ramas de cada función.
-"""
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
